@@ -1,0 +1,49 @@
+name: Build and Push to AWS ECR
+
+# 1. 언제 이 자동화 각본을 실행할 것인가?
+on:
+  push:
+    branches: [ "main", "master" ]
+
+# 2. 어떤 작업을 할 것인가?
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest # 깃허브가 빌려주는 무료 리눅스 컴퓨터를 사용합니다.
+
+    steps:
+    # 1단계: 깃허브 리포지토리에 있는 현우님의 최신 코드를 리눅스 컴퓨터로 가져옵니다.
+    - name: 최신 코드 가져오기
+      uses: actions/checkout@v3
+
+    # 2단계: 아까 Secrets에 저장해둔 키를 꺼내서 AWS 권한을 인증합니다.
+    - name: AWS 권한 인증하기
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    # 3단계: AWS ECR 창고에 로그인합니다.
+    - name: AWS ECR 로그인하기
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    # 4단계: PHP 앱 상자를 만들고(Build) ECR 창고에 넣습니다(Push).
+    - name: PHP 앱 이미지 빌드 및 ECR 푸시
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: aws-3tier-app
+        IMAGE_TAG: latest
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    # 5단계: Nginx 웹 상자를 만들고(Build) ECR 창고에 넣습니다(Push).
+    - name: Nginx 웹 이미지 빌드 및 ECR 푸시
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: aws-3tier-web
+        IMAGE_TAG: latest
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile.nginx .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

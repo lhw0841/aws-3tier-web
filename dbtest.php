@@ -7,7 +7,7 @@ ini_set('display_errors', 1);
 // 2. 접속 정보 변수 설정 (RDS의 주소와 문 열쇠들)
 $host = "rds-practice.clsggeq0wcpf.ap-northeast-2.rds.amazonaws.com"; // RDS 엔드포인트
 $user = "admin"; // DB 마스터 이름
-$pw = "Jpum4707!"; // DB 비밀번호
+$pw = getenv('DB_PASSWORD'); // 이제 코드에 직접 적지 않고 밖에서 주입받습니다.
 $db = "practice_db"; // 접속할 데이터베이스 이름
 $table = "users"; // 데이터를 가져올 테이블 이름
 

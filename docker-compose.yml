@@ -1,0 +1,17 @@
+version: '3.8' # 도커 컴포즈의 문법 버전입니다.
+
+services:
+  # 1. PHP 엔진 상자
+  app:
+    build: . # 현재 폴더의 Dockerfile을 읽어서 상자를 만듭니다.
+    restart: always # 상자가 죽으면 자동으로 다시 살립니다.
+
+  # 2. Nginx 웹 서버 상자
+  web:
+    build:
+      context: . # 현재 폴더에서
+      dockerfile: Dockerfile.nginx # 이 도면을 보고 Nginx 상자를 만듭니다.
+    ports:
+      - "80:80" # (밖에서 보는 80번 포트) : (상자 안의 80번 포트)를 연결합니다.
+    depends_on:
+      - app # PHP 상자(app)가 먼저 다 켜진 다음에 Nginx를 켭니다.
